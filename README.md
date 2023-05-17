@@ -1,4 +1,5 @@
-Piotr Bosak pbosak@student.agh.edu.pl
+## Autorzy
+Piotr Bosak pbosak@student.agh.edu.pl<br />
 Szymon Banyś szymonbanys@student.agh.edu.pl
 
 ## Technologie
