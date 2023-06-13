@@ -18,13 +18,14 @@ class GUI:
                     [sg.Column([[sg.InputText('YYYY-MM-DD', key='-START_DATE-', size=(20, 1)), sg.InputText('YYYY-MM-DD', key='-END_DATE-', size=(20, 1)), sg.Button('Dodaj rezerwacje', key='-ADD_RESERVATION-')]], justification='center', key='-ADD_COLUMN-', visible=False)],
                     [sg.Column([[sg.Button('Szukaj dostępnych narzędzi', key='-FIND_AVAILABLE_ITEMS-', size=(37, 1))]],justification='center', key='-FIND_ITEMS_COLUMN-', visible=False)],
                     [sg.Column([[sg.Button('Pokaz moje rezerwacje', key='-SHOW_RESERVATION-')]], justification='center', key='-SHOW_RESERVATION_COLUMN-', visible=False)],
-                    [sg.Column([[sg.Text("Numer rezerwacji:"), sg.InputText(size=(2, 1), key='-RESERVATION_ID-'), sg.Button('Anuluj rezerwacje', key='-CANCEL_RESERVATION-')]], justification='center', key='-CANCEL_RESERVATION_COLUMN-', visible=False)],
-                    [sg.Column([[sg.Text("Numer rezerwacji:"), sg.InputText(size=(2, 1), key='-RESERVATION_ID_ADD-'), sg.Text("Numer przedmiotu:"), sg.InputText(size=(2, 1), key='-RESERVATION_ITEM_ID-'), sg.Text("Ilość przedmiotu:"), sg.InputText(size=(2, 1), key='-RESERVATION_ITEM_QUANTITY-'), sg.Button("Dodaj do rezerwacji", key="-ADD_TO_RESERVATION-")]], visible=False, key='-ADD_ITEM_RESERVATION_COLUMN-')],
+                    [sg.Column([[sg.Button("Pokaż moje zarezerwowane narzędzia", key='-SHOW_RESERVED_ITEMS-')]], justification='center', key='-SHOW_RESERVATION_ITEMS_COLUMN-', visible=False)],
+                    [sg.Column([[sg.Text("Numer rezerwacji:"), sg.InputText(size=(3, 1), key='-RESERVATION_ID-'), sg.Button('Anuluj rezerwacje', key='-CANCEL_RESERVATION-')]], justification='center', key='-CANCEL_RESERVATION_COLUMN-', visible=False)],
+                    [sg.Column([[sg.Text("Numer rezerwacji:"), sg.InputText(size=(3, 1), key='-RESERVATION_ID_ADD-'), sg.Text("Numer przedmiotu:"), sg.InputText(size=(3, 1), key='-RESERVATION_ITEM_ID-'), sg.Text("Ilość przedmiotu:"), sg.InputText(size=(3, 1), key='-RESERVATION_ITEM_QUANTITY-'), sg.Button("Dodaj do rezerwacji", key="-ADD_TO_RESERVATION-")]], visible=False, key='-ADD_ITEM_RESERVATION_COLUMN-')],
                     
                     [sg.Column([[sg.Text('Podaj tabele którą chcesz wyświetlić:'), sg.Combo(['client', 'rent', 'renthist', 'rentitems', 'item'], enable_events=True, key='table_name'), sg.Button('Ok', key='-CHOOSE_TABLE-')]], justification='center', key='-SHOW_TABLES-')]
                     ]
         # Create the Window
-        self.window = sg.Window('Window Title', self.layout, size=(600, 600))
+        self.window = sg.Window('Window Title', self.layout, size=(700, 600))
         # Event Loop to process "events" and get the "values" of the inputs
         while True:
             event, values = self.window.read()
@@ -35,7 +36,7 @@ class GUI:
             elif event == '-CHOOSE_TABLE-':
                 data = self.dbm.select_from_table(values['table_name'])
                 data[1:].sort(key=lambda x : x[0])
-                sg.popup_scrolled(*data, title=values['table_name'])
+                sg.popup_scrolled(*data, title=values['table_name'], non_blocking=True)
 
             elif event == '-LOGIN-':
                 if not values["-USER-"]:
@@ -50,6 +51,7 @@ class GUI:
                 self.window["-CANCEL_RESERVATION_COLUMN-"].update(visible=True)
                 self.window["-FIND_ITEMS_COLUMN-"].update(visible=True)
                 self.window["-ADD_ITEM_RESERVATION_COLUMN-"].update(visible=True)
+                self.window["-SHOW_RESERVATION_ITEMS_COLUMN-"].update(visible=True)
 
             elif event == '-LOGOUT-':
                 self.window["-LOGIN_INFO-"].update(self.login_text)
@@ -62,6 +64,7 @@ class GUI:
                 self.window["-CANCEL_RESERVATION_COLUMN-"].update(visible=False)
                 self.window["-FIND_ITEMS_COLUMN-"].update(visible=False)
                 self.window["-ADD_ITEM_RESERVATION_COLUMN-"].update(visible=False)
+                self.window["-SHOW_RESERVATION_ITEMS_COLUMN-"].update(visible=False)
 
             elif event == '-ADD_RESERVATION-':
                 usr_id = values["-USER-"][0]
@@ -74,19 +77,29 @@ class GUI:
                 end_date = values["-END_DATE-"]
                 data = self.dbm.get_available_items(begin_date, end_date)
                 sg.popup_scrolled(*data, title="Dostępne przedmioty", non_blocking=True)
+
             elif event == '-SHOW_RESERVATION-':
                 usr_id = values["-USER-"][0]
                 data = self.dbm.show_my_reservations(usr_id)
                 sg.popup_scrolled(*data, title="Moje rezerwacje", non_blocking=True)
+
+            elif event == '-SHOW_RESERVED_ITEMS-':
+                usr_id = values["-USER-"][0]
+                data = self.dbm.show_my_reserved_items(usr_id)
+                sg.popup_scrolled(*data, title="Moje zarezerwowane narzędzia", non_blocking=True)
+
             elif event == '-CANCEL_RESERVATION-':
                 rent_id = values["-RESERVATION_ID-"]
                 self.dbm.cancel_reservation(rent_id)
-                print("theoritically cancelled")
+
             elif event == '-ADD_TO_RESERVATION-':
                 rent_id = values["-RESERVATION_ID_ADD-"]
                 item_id = values["-RESERVATION_ITEM_ID-"]
                 item_quantity = values["-RESERVATION_ITEM_QUANTITY-"]
-                self.dbm.add_item_to_reservation(rent_id, item_id, item_quantity)
+                if self.dbm.add_item_to_reservation(rent_id, item_id, item_quantity):
+                    sg.Popup("Nie ma tyle dostepnych przedmiotów/ taki przedmiot nie istnieje bądź nie ma takiej rezerwacji")
+                else:
+                    sg.Popup("Pomyślnie dodano przedmiot do rezerwacji!")
         self.window.close()
 
 

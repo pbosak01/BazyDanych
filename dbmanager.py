@@ -58,6 +58,24 @@ class DBManager:
         return data
     
     def show_my_reservations(self, client_id):
+        result = self._cursor.execute(f"select * from clientrents('{client_id}')")
+        data = result.fetchall()
+        col_names = [row[0] for row in self._cursor.description]
+
+        new_data = [[] for _ in range(len(data))]
+
+        for i in range(len(data)):
+            for thing in data[i]:
+                if type(thing) == datetime:
+                    new_data[i].append(thing.strftime("%Y-%m-%d"))
+                    continue
+                new_data[i].append(thing)
+
+        new_data.sort(key = lambda x : x[0])
+        new_data.insert(0, col_names)
+        return new_data
+    
+    def show_my_reserved_items(self, client_id):
         result = self._cursor.execute(f"select * from myreservations('{client_id}')")
         data = result.fetchall()
         col_names = [row[0] for row in self._cursor.description]
@@ -81,8 +99,17 @@ class DBManager:
                                end;")
 
     def add_item_to_reservation(self, rent_id, item_id, item_quantity):
-        price = self._cursor.execute(f"select priceperday from item where ID = '{item_id}'")
-        print(price)
+        try:
+            price = self._cursor.execute(f"select priceperday from item where ID = '{item_id}'")
+            add_price = price.fetchone()[0]
+            self._cursor.execute(f"begin\
+                                additemtorent('{rent_id}', '{item_id}', '{item_quantity}', '{add_price}');\
+                                end;")
+            return False
+        except cx_Oracle.DatabaseError as e:
+            return True
+        except TypeError:
+            return True
 
     def end_connection(self):
         self._cursor.close()
