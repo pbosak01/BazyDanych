@@ -21,8 +21,8 @@ class GUI:
                     [sg.Column([[sg.Button("Pokaż moje zarezerwowane narzędzia", key='-SHOW_RESERVED_ITEMS-')]], justification='center', key='-SHOW_RESERVATION_ITEMS_COLUMN-', visible=False)],
                     [sg.Column([[sg.Text("Numer rezerwacji:"), sg.InputText(size=(3, 1), key='-RESERVATION_ID-'), sg.Button('Anuluj rezerwacje', key='-CANCEL_RESERVATION-')]], justification='center', key='-CANCEL_RESERVATION_COLUMN-', visible=False)],
                     [sg.Column([[sg.Text("Numer rezerwacji:"), sg.InputText(size=(3, 1), key='-RESERVATION_ID_ADD-'), sg.Text("Numer przedmiotu:"), sg.InputText(size=(3, 1), key='-RESERVATION_ITEM_ID-'), sg.Text("Ilość przedmiotu:"), sg.InputText(size=(3, 1), key='-RESERVATION_ITEM_QUANTITY-'), sg.Button("Dodaj do rezerwacji", key="-ADD_TO_RESERVATION-")]], visible=False, key='-ADD_ITEM_RESERVATION_COLUMN-')],
-                    
-                    [sg.Column([[sg.Text('Podaj tabele którą chcesz wyświetlić:'), sg.Combo(['client', 'rent', 'renthist', 'rentitems', 'item'], enable_events=True, key='table_name'), sg.Button('Ok', key='-CHOOSE_TABLE-')]], justification='center', key='-SHOW_TABLES-')]
+                    [sg.Column([[sg.Text('Podaj tabele którą chcesz wyświetlić:'), sg.Combo(['client', 'rent', 'renthist', 'rentitems', 'item'], enable_events=True, key='table_name'), sg.Button('Ok', key='-CHOOSE_TABLE-')]], justification='center', key='-SHOW_TABLES-')],
+                    [sg.Column([[sg.Text("Numer rezerwacji:"), sg.InputText(size=(3, 1), key='-RESERVATION_ID_TO_HISTORY-'), sg.Text("Data oddania:"), sg.InputText(size=(3, 1), key='-RETURN_DATE-'),sg.Button('Przenieś do historii', key='-MOVE_TO_HISTORY-')]], justification='center', key='-MOVE_TO_HISTORY_COLUMN-', visible=False)],
                     ]
         # Create the Window
         self.window = sg.Window('Window Title', self.layout, size=(700, 600))
@@ -52,7 +52,7 @@ class GUI:
                 self.window["-FIND_ITEMS_COLUMN-"].update(visible=True)
                 self.window["-ADD_ITEM_RESERVATION_COLUMN-"].update(visible=True)
                 self.window["-SHOW_RESERVATION_ITEMS_COLUMN-"].update(visible=True)
-
+                self.window["-MOVE_TO_HISTORY_COLUMN-"].update(visible=True)
             elif event == '-LOGOUT-':
                 self.window["-LOGIN_INFO-"].update(self.login_text)
                 self.cur_usr = None
@@ -65,6 +65,7 @@ class GUI:
                 self.window["-FIND_ITEMS_COLUMN-"].update(visible=False)
                 self.window["-ADD_ITEM_RESERVATION_COLUMN-"].update(visible=False)
                 self.window["-SHOW_RESERVATION_ITEMS_COLUMN-"].update(visible=False)
+                self.window["-MOVE_TO_HISTORY_COLUMN-"].update(visible=False)
 
             elif event == '-ADD_RESERVATION-':
                 usr_id = values["-USER-"][0]
@@ -100,6 +101,11 @@ class GUI:
                     sg.Popup("Nie ma tyle dostepnych przedmiotów/ taki przedmiot nie istnieje bądź nie ma takiej rezerwacji")
                 else:
                     sg.Popup("Pomyślnie dodano przedmiot do rezerwacji!")
+            
+            elif event == '-MOVE_TO_HISTORY-':
+                rent_id = values["-RESERVATION_ID_TO_HISTORY-"]
+                return_date = values["-RETURN_DATE-"]
+                self.dbm.move_to_history(rent_id, return_date)
         self.window.close()
 
 

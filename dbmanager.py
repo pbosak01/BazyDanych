@@ -8,6 +8,7 @@ from datetime import datetime
 # r - rezerwacja
 # p - wypozyczony
 # c - anulowany
+# d - zakończone
 
 class DBManager:
     def __init__(self) -> None:
@@ -110,6 +111,11 @@ class DBManager:
             return True
         except TypeError:
             return True
+
+    def move_to_history(self, rent_id, return_date):
+        self._cursor.execute(f"begin\
+                               movetohist('{rent_id}','{return_date}');\
+                               end;")
 
     def end_connection(self):
         self._cursor.close()
