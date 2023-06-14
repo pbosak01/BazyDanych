@@ -3,7 +3,7 @@ Piotr Bosak pbosak@student.agh.edu.pl<br />
 Szymon Banyś szymonbanys@student.agh.edu.pl
 
 ## Technologie
-Python (PySimpleGUI)<br />
+Python (PySimpleGUI, cx_Oracle)<br />
 Oracle
 
 ## Schemat bazy danych:
